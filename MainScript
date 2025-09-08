@@ -1,836 +1,206 @@
-local Library = {}
+-- Load the UI library
+local Library = loadstring(game:HttpGet("https://raw.githubusercontent.com/OtakuDreamer98/Rip_kaizer87/refs/heads/main/Rip_kaizer87Hub"))()
 
--- Services
-local Players = game:GetService("Players")
-local TweenService = game:GetService("TweenService")
-local UserInputService = game:GetService("UserInputService")
-local CoreGui = game:GetService("CoreGui")
-local GuiService = game:GetService("GuiService")
+------------------------------------------------
+-- MAIN TAB (2nd after Intro)
+------------------------------------------------
+local mainTab = Library:CreateTab("Main")
 
--- ScreenGui setup
-local ScreenGui = Instance.new("ScreenGui")
-ScreenGui.Name = "RipKaizerUI"
-ScreenGui.Parent = CoreGui
-ScreenGui.ResetOnSpawn = false
-ScreenGui.IgnoreGuiInset = true
+------------------------------------------------
+-- WEAPON GIVER TAB (3rd)
+------------------------------------------------
+local weaponTab = Library:CreateTab("Weapon Giver")
 
--- Toggle button for show/hide
-local ToggleButton = Instance.new("TextButton")
-ToggleButton.Size = UDim2.new(0, 60, 0, 40)
-ToggleButton.Position = UDim2.new(0, 10, 0, 60)
-ToggleButton.BackgroundColor3 = Color3.fromRGB(150, 0, 0)
-ToggleButton.TextColor3 = Color3.new(1, 1, 1)
-ToggleButton.Text = "Hide"
-ToggleButton.Font = Enum.Font.GothamBold
-ToggleButton.TextSize = 16
-ToggleButton.BorderSizePixel = 0
-ToggleButton.Active = true
-ToggleButton.Draggable = true
-ToggleButton.Visible = false -- Hide initially
-ToggleButton.Parent = ScreenGui
-
-local ToggleCorner = Instance.new("UICorner")
-ToggleCorner.CornerRadius = UDim.new(0, 8)
-ToggleCorner.Parent = ToggleButton
-
-local ToggleStroke = Instance.new("UIStroke")
-ToggleStroke.Color = Color3.fromRGB(100, 0, 0)
-ToggleStroke.Thickness = 1
-ToggleStroke.Transparency = 0.5
-ToggleStroke.Parent = ToggleButton
-
--- Main window
-local Main = Instance.new("Frame")
-Main.Size = UDim2.new(0, 600, 0, 400)
-local screenSize = GuiService:GetScreenResolution()
-Main.Position = UDim2.new(0, screenSize.X / 2 - 300, 0, screenSize.Y / 2 - 200)
-Main.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
-Main.ClipsDescendants = true
-Main.Active = true
-Main.Draggable = true
-Main.Visible = false -- Hide initially
-Main.Parent = ScreenGui
-
--- Rounded corners for main window
-local MainCorner = Instance.new("UICorner")
-MainCorner.CornerRadius = UDim.new(0, 10)
-MainCorner.Parent = Main
-
-local MainStroke = Instance.new("UIStroke")
-MainStroke.Color = Color3.fromRGB(150, 0, 0)
-MainStroke.Thickness = 1
-MainStroke.Transparency = 0.8
-MainStroke.Parent = Main
-
--- Shadow for main window
-local MainShadow = Instance.new("ImageLabel")
-MainShadow.Size = UDim2.new(1, 30, 1, 30)
-MainShadow.Position = UDim2.new(0, -15, 0, -15)
-MainShadow.BackgroundTransparency = 1
-MainShadow.Image = "rbxassetid://6014261993" -- Roblox shadow asset
-MainShadow.ImageColor3 = Color3.new(0, 0, 0)
-MainShadow.ImageTransparency = 0.5
-MainShadow.ScaleType = Enum.ScaleType.Slice
-MainShadow.SliceCenter = Rect.new(10, 10, 118, 118)
-MainShadow.Parent = Main
-
--- Prevent dragging off-screen for main window
-local function constrainToScreen()
-    local screenSize = GuiService:GetScreenResolution()
-    local minX, minY = 0, 36
-    local maxX = screenSize.X - Main.AbsoluteSize.X
-    local maxY = screenSize.Y - Main.AbsoluteSize.Y
-    local pos = Main.Position
-    local newX = math.clamp(pos.X.Offset, minX, maxX)
-    local newY = math.clamp(pos.Y.Offset, minY, maxY)
-    Main.Position = UDim2.new(0, newX, 0, newY)
-end
-
--- Prevent dragging off-screen for toggle button
-local function constrainToggleToScreen()
-    local screenSize = GuiService:GetScreenResolution()
-    local minX, minY = 0, 0
-    local maxX = screenSize.X - ToggleButton.AbsoluteSize.X
-    local maxY = screenSize.Y - ToggleButton.AbsoluteSize.Y
-    local pos = ToggleButton.Position
-    local newX = math.clamp(pos.X.Offset, minX, maxX)
-    local newY = math.clamp(pos.Y.Offset, minY, maxY)
-    ToggleButton.Position = UDim2.new(0, newX, 0, newY)
-end
-
--- Handle dragging for main window
-Main.Changed:Connect(function(property)
-    if property == "Position" then
-        constrainToScreen()
-    end
-end)
-
--- Handle dragging for toggle button
-ToggleButton.Changed:Connect(function(property)
-    if property == "Position" then
-        constrainToggleToScreen()
-    end
-end)
-
--- Mobile dragging support for main window and toggle button
-local draggingMain, draggingToggle
-local lastTouchPosMain, lastTouchPosToggle
-
-UserInputService.InputBegan:Connect(function(input)
-    if input.UserInputType == Enum.UserInputType.Touch then
-        if Main:IsAncestorOf(input.Position) then
-            draggingMain = true
-            lastTouchPosMain = input.Position
-        elseif ToggleButton:IsAncestorOf(input.Position) then
-            draggingToggle = true
-            lastTouchPosToggle = input.Position
-        end
-    end
-end)
-
-UserInputService.InputChanged:Connect(function(input)
-    if input.UserInputType == Enum.UserInputType.Touch then
-        if draggingMain and lastTouchPosMain then
-            local delta = input.Position - lastTouchPosMain
-            local newPos = Main.Position + UDim2.new(0, delta.X, 0, delta.Y)
-            Main.Position = newPos
-            lastTouchPosMain = input.Position
-            constrainToScreen()
-        elseif draggingToggle and lastTouchPosToggle then
-            local delta = input.Position - lastTouchPosToggle
-            local newPos = ToggleButton.Position + UDim2.new(0, delta.X, 0, delta.Y)
-            ToggleButton.Position = newPos
-            lastTouchPosToggle = input.Position
-            constrainToggleToScreen()
-        end
-    end
-end)
-
-UserInputService.InputEnded:Connect(function(input)
-    if input.UserInputType == Enum.UserInputType.Touch then
-        if draggingMain then
-            draggingMain = false
-            lastTouchPosMain = nil
-        elseif draggingToggle then
-            draggingToggle = false
-            lastTouchPosToggle = nil
-        end
-    end
-end)
-
--- Toggle show/hide functionality with animation
-local function toggleMainVisibility()
-    if Main.Visible then
-        local tweenInfo = TweenInfo.new(0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.In)
-        local tween = TweenService:Create(Main, tweenInfo, {Size = UDim2.new(0, 600, 0, 0)})
-        tween:Play()
-        tween.Completed:Wait()
-        Main.Visible = false
-        ToggleButton.Text = "Show"
-    else
-        Main.Visible = true
-        local tweenInfo = TweenInfo.new(0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
-        local tween = TweenService:Create(Main, tweenInfo, {Size = UDim2.new(0, 600, 0, 400)})
-        tween:Play()
-        ToggleButton.Text = "Hide"
-    end
-end
-
-ToggleButton.MouseButton1Click:Connect(toggleMainVisibility)
-
--- Title bar
-local Title = Instance.new("TextLabel")
-Title.Text = "Rip_kaizer87's UI Library"
-Title.Size = UDim2.new(1, 0, 0, 40)
-Title.BackgroundColor3 = Color3.fromRGB(150, 0, 0)
-Title.TextColor3 = Color3.new(1, 1, 1)
-Title.Font = Enum.Font.GothamBold
-Title.TextSize = 20
-Title.Parent = Main
-
-local TitleCorner = Instance.new("UICorner")
-TitleCorner.CornerRadius = UDim.new(0, 8)
-TitleCorner.Parent = Title
-
--- Close button in title bar
-local CloseButton = Instance.new("TextButton")
-CloseButton.Size = UDim2.new(0, 30, 0, 30)
-CloseButton.Position = UDim2.new(1, -35, 0, 5)
-CloseButton.BackgroundColor3 = Color3.fromRGB(200, 0, 0)
-CloseButton.TextColor3 = Color3.new(1, 1, 1)
-CloseButton.Text = "X"
-CloseButton.Font = Enum.Font.GothamBold
-CloseButton.TextSize = 16
-CloseButton.BorderSizePixel = 0
-CloseButton.Parent = Title
-
-local CloseCorner = Instance.new("UICorner")
-CloseCorner.CornerRadius = UDim.new(0, 6)
-CloseCorner.Parent = CloseButton
-
-CloseButton.MouseButton1Click:Connect(function()
-    ScreenGui:Destroy()
-end)
-
--- Tab section
-local TabSection = Instance.new("ScrollingFrame")
-TabSection.Size = UDim2.new(0, 150, 1, -60)
-TabSection.Position = UDim2.new(0, 20, 0, 50)
-TabSection.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
-TabSection.ScrollBarThickness = 4
-TabSection.CanvasSize = UDim2.new(0, 0, 0, 0)
-TabSection.BorderSizePixel = 0
-TabSection.Parent = Main
-TabSection.MidImage = "rbxassetid://0"
-TabSection.ScrollBarImageColor3 = Color3.fromRGB(150, 0, 0)
-
-local TabCorner = Instance.new("UICorner")
-TabCorner.CornerRadius = UDim.new(0, 8)
-TabCorner.Parent = TabSection
-
-local TabPadding = Instance.new("UIPadding")
-TabPadding.PaddingTop = UDim.new(0, 10)
-TabPadding.PaddingLeft = UDim.new(0, 10)
-TabPadding.PaddingRight = UDim.new(0, 10)
-TabPadding.Parent = TabSection
-
-local TabLayout = Instance.new("UIListLayout")
-TabLayout.Padding = UDim.new(0, 10)
-TabLayout.FillDirection = Enum.FillDirection.Vertical
-TabLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
-TabLayout.VerticalAlignment = Enum.VerticalAlignment.Top
-TabLayout.Parent = TabSection
-
--- Separator line
-local Separator = Instance.new("Frame")
-Separator.Size = UDim2.new(0, 2, 1, -60)
-Separator.Position = UDim2.new(0, 180, 0, 50)
-Separator.BackgroundColor3 = Color3.fromRGB(150, 0, 0)
-Separator.BorderSizePixel = 0
-Separator.Parent = Main
-
--- Content section
-local Content = Instance.new("ScrollingFrame")
-Content.Size = UDim2.new(0, 400, 1, -60)
-Content.Position = UDim2.new(0, 192, 0, 50)
-Content.BackgroundTransparency = 1
-Content.ScrollBarThickness = 4
-Content.CanvasSize = UDim2.new(0, 0, 0, 0)
-Content.Parent = Main
-
-local ContentPadding = Instance.new("UIPadding")
-ContentPadding.PaddingLeft = UDim.new(0, 10)
-ContentPadding.PaddingRight = UDim.new(0, 10)
-ContentPadding.PaddingTop = UDim.new(0, 10)
-ContentPadding.Parent = Content
-
--- Store tabs and their content
-local tabs = {}
-local currentTab = nil
-
--- Function to switch tabs with animation
-local function switchTab(tabName)
-    if currentTab == tabName then return end
-    currentTab = tabName
-
-    for _, tab in pairs(tabs) do
-        tab.content.Visible = false
-        tab.button.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
-    end
-
-    local selectedTab = tabs[tabName]
-    selectedTab.button.BackgroundColor3 = Color3.fromRGB(150, 0, 0)
-    selectedTab.content.Visible = true
-
-    -- Animation
-    selectedTab.content.Position = UDim2.new(0, 50, 0, 0)
-    local tweenInfo = TweenInfo.new(0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
-    local tween = TweenService:Create(selectedTab.content, tweenInfo, {Position = UDim2.new(0, 0, 0, 0)})
-    tween:Play()
-
-    -- Update scroll canvas sizes
-    TabSection.CanvasSize = UDim2.new(0, 0, 0, TabLayout.AbsoluteContentSize.Y + 20)
-    Content.CanvasSize = UDim2.new(0, 0, 0, selectedTab.contentLayout.AbsoluteContentSize.Y + 20)
-end
-
--- Function to show the main UI with a fade-in animation
-local function showUI()
-    ToggleButton.Visible = true
-    Main.Visible = true
-    ToggleButton.BackgroundTransparency = 1
-    Main.BackgroundTransparency = 1
-    local tweenInfo = TweenInfo.new(0.5, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
-    TweenService:Create(ToggleButton, tweenInfo, {BackgroundTransparency = 0}):Play()
-    TweenService:Create(Main, tweenInfo, {BackgroundTransparency = 0}):Play()
-end
-
--- Function to create a tab
-function Library:CreateTab(name)
-    local tabButton = Instance.new("TextButton")
-    tabButton.Size = UDim2.new(1, -20, 0, 40)
-    tabButton.Position = UDim2.new(0, 0, 0, 0)
-    tabButton.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
-    tabButton.TextColor3 = Color3.new(1, 1, 1)
-    tabButton.Text = name
-    tabButton.Font = Enum.Font.Gotham
-    tabButton.TextSize = 16
-    tabButton.TextXAlignment = Enum.TextXAlignment.Center
-    tabButton.BorderSizePixel = 0
-    tabButton.Parent = TabSection
-
-    local tabButtonCorner = Instance.new("UICorner")
-    tabButtonCorner.CornerRadius = UDim.new(0, 6)
-    tabButtonCorner.Parent = tabButton
-
-    local tabButtonStroke = Instance.new("UIStroke")
-    tabButtonStroke.Color = Color3.fromRGB(100, 0, 0)
-    tabButtonStroke.Thickness = 1
-    tabButtonStroke.Transparency = 0.5
-    tabButtonStroke.Parent = tabButton
-
-    local tabContent = Instance.new("Frame")
-    tabContent.Size = UDim2.new(1, 0, 1, 0)
-    tabContent.BackgroundTransparency = 1
-    tabContent.Visible = false
-    tabContent.Parent = Content
-
-    local tabContentLayout = Instance.new("UIListLayout")
-    tabContentLayout.Padding = UDim.new(0, 8)
-    tabContentLayout.FillDirection = Enum.FillDirection.Vertical
-    tabContentLayout.Parent = tabContent
-
-    tabs[name] = {button = tabButton, content = tabContent, contentLayout = tabContentLayout}
-
-    tabButton.MouseButton1Click:Connect(function()
-        switchTab(name)
+-- Function to create weapon buttons
+local function createWeaponButton(weaponName)
+    weaponTab:Button("Give " .. weaponName, function()
+        local args = {weaponName}
+        game:GetService("ReplicatedStorage"):WaitForChild("GiveTool"):FireServer(unpack(args))
+        print("Requested to give", weaponName)
     end)
-
-    if not currentTab then
-        switchTab(name)
-    end
-
-    -- Return tab object for adding elements
-    local tab = {}
-
-    -- Improved Button with hover effect
-    function tab:Button(text, callback)
-        local btn = Instance.new("TextButton")
-        btn.Size = UDim2.new(1, -10, 0, 40)
-        btn.Position = UDim2.new(0, 5, 0, 0)
-        btn.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
-        btn.TextColor3 = Color3.new(1, 1, 1)
-        btn.Text = text
-        btn.Font = Enum.Font.Gotham
-        btn.TextSize = 16
-        btn.BorderSizePixel = 0
-        btn.Parent = tabContent
-
-        local btnCorner = Instance.new("UICorner")
-        btnCorner.CornerRadius = UDim.new(0, 6)
-        btnCorner.Parent = btn
-
-        local btnStroke = Instance.new("UIStroke")
-        btnStroke.Color = Color3.fromRGB(150, 0, 0)
-        btnStroke.Thickness = 1
-        btnStroke.Transparency = 0.8
-        btnStroke.Parent = btn
-
-        -- Hover effect
-        btn.MouseEnter:Connect(function()
-            local tween = TweenService:Create(btn, TweenInfo.new(0.2), {BackgroundColor3 = Color3.fromRGB(80, 80, 80)})
-            tween:Play()
-        end)
-
-        btn.MouseLeave:Connect(function()
-            local tween = TweenService:Create(btn, TweenInfo.new(0.2), {BackgroundColor3 = Color3.fromRGB(60, 60, 60)})
-            tween:Play()
-        end)
-
-        btn.MouseButton1Click:Connect(callback or function() end)
-    end
-
-    -- Improved Toggle with switch UI
-    function tab:Toggle(text, default, callback)
-        local toggleFrame = Instance.new("Frame")
-        toggleFrame.Size = UDim2.new(1, -10, 0, 40)
-        toggleFrame.Position = UDim2.new(0, 5, 0, 0)
-        toggleFrame.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
-        toggleFrame.Parent = tabContent
-
-        local toggleCorner = Instance.new("UICorner")
-        toggleCorner.CornerRadius = UDim.new(0, 6)
-        toggleCorner.Parent = toggleFrame
-
-        local toggleLabel = Instance.new("TextLabel")
-        toggleLabel.Size = UDim2.new(1, -60, 1, 0)
-        toggleLabel.BackgroundTransparency = 1
-        toggleLabel.TextColor3 = Color3.new(1, 1, 1)
-        toggleLabel.Text = text
-        toggleLabel.Font = Enum.Font.Gotham
-        toggleLabel.TextSize = 16
-        toggleLabel.TextXAlignment = Enum.TextXAlignment.Left
-        toggleLabel.Parent = toggleFrame
-
-        local switch = Instance.new("Frame")
-        switch.Size = UDim2.new(0, 50, 0, 24)
-        switch.Position = UDim2.new(1, -55, 0.5, -12)
-        switch.BackgroundColor3 = default and Color3.fromRGB(150, 0, 0) or Color3.fromRGB(100, 100, 100)
-        switch.Parent = toggleFrame
-
-        local switchCorner = Instance.new("UICorner")
-        switchCorner.CornerRadius = UDim.new(0, 12)
-        switchCorner.Parent = switch
-
-        local knob = Instance.new("Frame")
-        knob.Size = UDim2.new(0, 20, 0, 20)
-        knob.Position = default and UDim2.new(1, -24, 0.5, -10) or UDim2.new(0, 4, 0.5, -10)
-        knob.BackgroundColor3 = Color3.new(1, 1, 1)
-        knob.Parent = switch
-
-        local knobCorner = Instance.new("UICorner")
-        knobCorner.CornerRadius = UDim.new(0, 10)
-        knobCorner.Parent = knob
-
-        local state = default
-        toggleFrame.InputBegan:Connect(function(input)
-            if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
-                state = not state
-                local tweenInfo = TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
-                local switchColor = state and Color3.fromRGB(150, 0, 0) or Color3.fromRGB(100, 100, 100)
-                local knobPos = state and UDim2.new(1, -24, 0.5, -10) or UDim2.new(0, 4, 0.5, -10)
-                TweenService:Create(switch, tweenInfo, {BackgroundColor3 = switchColor}):Play()
-                TweenService:Create(knob, tweenInfo, {Position = knobPos}):Play()
-                if callback then callback(state) end
-            end
-        end)
-    end
-
-    -- Improved Slider with value display and smoother dragging
-    function tab:Slider(text, min, max, default, callback)
-        local sliderFrame = Instance.new("Frame")
-        sliderFrame.Size = UDim2.new(1, -10, 0, 60)
-        sliderFrame.Position = UDim2.new(0, 5, 0, 0)
-        sliderFrame.BackgroundTransparency = 1
-        sliderFrame.Parent = tabContent
-
-        local label = Instance.new("TextLabel")
-        label.Size = UDim2.new(1, 0, 0, 20)
-        label.BackgroundTransparency = 1
-        label.TextColor3 = Color3.new(1, 1, 1)
-        label.Text = text .. ": " .. default
-        label.Font = Enum.Font.Gotham
-        label.TextSize = 16
-        label.Parent = sliderFrame
-
-        local sliderTrack = Instance.new("Frame")
-        sliderTrack.Size = UDim2.new(1, 0, 0, 10)
-        sliderTrack.Position = UDim2.new(0, 0, 0, 30)
-        sliderTrack.BackgroundColor3 = Color3.fromRGB(100, 0, 0)
-        sliderTrack.BorderSizePixel = 0
-        sliderTrack.Parent = sliderFrame
-
-        local sliderTrackCorner = Instance.new("UICorner")
-        sliderTrackCorner.CornerRadius = UDim.new(0, 5)
-        sliderTrackCorner.Parent = sliderTrack
-
-        local sliderFill = Instance.new("Frame")
-        sliderFill.Size = UDim2.new((default - min) / (max - min), 0, 1, 0)
-        sliderFill.BackgroundColor3 = Color3.fromRGB(150, 0, 0)
-        sliderFill.BorderSizePixel = 0
-        sliderFill.Parent = sliderTrack
-
-        local sliderFillCorner = Instance.new("UICorner")
-        sliderFillCorner.CornerRadius = UDim.new(0, 5)
-        sliderFillCorner.Parent = sliderFill
-
-        local sliderKnob = Instance.new("Frame")
-        sliderKnob.Size = UDim2.new(0, 24, 0, 24)
-        sliderKnob.Position = UDim2.new((default - min) / (max - min), -12, 0, -7)
-        sliderKnob.BackgroundColor3 = Color3.fromRGB(200, 0, 0)
-        sliderKnob.BorderSizePixel = 0
-        sliderKnob.Parent = sliderTrack
-
-        local sliderKnobCorner = Instance.new("UICorner")
-        sliderKnobCorner.CornerRadius = UDim.new(0, 12)
-        sliderKnobCorner.Parent = sliderKnob
-
-        local sliderKnobStroke = Instance.new("UIStroke")
-        sliderKnobStroke.Color = Color3.fromRGB(255, 255, 255)
-        sliderKnobStroke.Thickness = 1
-        sliderKnobStroke.Transparency = 0.5
-        sliderKnobStroke.Parent = sliderKnob
-
-        local dragging = false
-        local function updateSlider(input)
-            local sliderX = sliderTrack.AbsolutePosition.X
-            local sliderWidth = sliderTrack.AbsoluteSize.X
-            local t = math.clamp((input.Position.X - sliderX) / sliderWidth, 0, 1)
-            local value = math.floor(min + (max - min) * t + 0.5)
-            local tweenInfo = TweenInfo.new(0.1, Enum.EasingStyle.Linear)
-            TweenService:Create(sliderFill, tweenInfo, {Size = UDim2.new(t, 0, 1, 0)}):Play()
-            TweenService:Create(sliderKnob, tweenInfo, {Position = UDim2.new(t, -12, 0, -7)}):Play()
-            label.Text = text .. ": " .. value
-            if callback then callback(value) end
-            return value
-        end
-
-        local function startDragging(input)
-            if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
-                dragging = true
-                updateSlider(input)
-            end
-        end
-
-        local function endDragging(input)
-            if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
-                dragging = false
-            end
-        end
-
-        sliderTrack.InputBegan:Connect(startDragging)
-        sliderTrack.InputEnded:Connect(endDragging)
-        sliderKnob.InputBegan:Connect(startDragging)
-        sliderKnob.InputEnded:Connect(endDragging)
-
-        UserInputService.InputChanged:Connect(function(input)
-            if dragging and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
-                updateSlider(input)
-            end
-        end)
-    end
-
-    -- Improved Dropdown with hover effects
-    function tab:Dropdown(text, options, callback)
-        local dropdown = Instance.new("TextButton")
-        dropdown.Size = UDim2.new(1, -10, 0, 40)
-        dropdown.Position = UDim2.new(0, 5, 0, 0)
-        dropdown.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
-        dropdown.TextColor3 = Color3.new(1, 1, 1)
-        dropdown.Text = text .. ": " .. options[1]
-        dropdown.Font = Enum.Font.Gotham
-        dropdown.TextSize = 16
-        dropdown.BorderSizePixel = 0
-        dropdown.Parent = tabContent
-
-        local dropdownCorner = Instance.new("UICorner")
-        dropdownCorner.CornerRadius = UDim.new(0, 6)
-        dropdownCorner.Parent = dropdown
-
-        local dropdownStroke = Instance.new("UIStroke")
-        dropdownStroke.Color = Color3.fromRGB(150, 0, 0)
-        dropdownStroke.Thickness = 1
-        dropdownStroke.Transparency = 0.8
-        dropdownStroke.Parent = dropdown
-
-        local optionsFrame = Instance.new("Frame")
-        optionsFrame.Size = UDim2.new(1, 0, 0, #options * 32)
-        optionsFrame.Position = UDim2.new(0, 0, 0, 42)
-        optionsFrame.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
-        optionsFrame.Visible = false
-        optionsFrame.BorderSizePixel = 0
-        optionsFrame.Parent = dropdown
-
-        local optionsCorner = Instance.new("UICorner")
-        optionsCorner.CornerRadius = UDim.new(0, 6)
-        optionsCorner.Parent = optionsFrame
-
-        local optionsLayout = Instance.new("UIListLayout")
-        optionsLayout.Padding = UDim.new(0, 2)
-        optionsLayout.Parent = optionsFrame
-
-        for _, option in ipairs(options) do
-            local optBtn = Instance.new("TextButton")
-            optBtn.Size = UDim2.new(1, 0, 0, 30)
-            optBtn.BackgroundColor3 = Color3.fromRGB(70, 70, 70)
-            optBtn.TextColor3 = Color3.new(1, 1, 1)
-            optBtn.Text = option
-            optBtn.Font = Enum.Font.Gotham
-            optBtn.TextSize = 14
-            optBtn.BorderSizePixel = 0
-            optBtn.Parent = optionsFrame
-
-            local optCorner = Instance.new("UICorner")
-            optCorner.CornerRadius = UDim.new(0, 4)
-            optCorner.Parent = optBtn
-
-            -- Hover effect for options
-            optBtn.MouseEnter:Connect(function()
-                local tween = TweenService:Create(optBtn, TweenInfo.new(0.2), {BackgroundColor3 = Color3.fromRGB(90, 90, 90)})
-                tween:Play()
-            end)
-
-            optBtn.MouseLeave:Connect(function()
-                local tween = TweenService:Create(optBtn, TweenInfo.new(0.2), {BackgroundColor3 = Color3.fromRGB(70, 70, 70)})
-                tween:Play()
-            end)
-
-            optBtn.MouseButton1Click:Connect(function()
-                dropdown.Text = text .. ": " .. option
-                optionsFrame.Visible = false
-                if callback then callback(option) end
-            end)
-        end
-
-        dropdown.MouseButton1Click:Connect(function()
-            optionsFrame.Visible = not optionsFrame.Visible
-        end)
-    end
-
-    return tab
 end
 
--- Intro/Credits tab
-local introTab = Library:CreateTab("Intro")
-local introFrame = Instance.new("Frame")
-introFrame.Size = UDim2.new(1, -20, 0, 340)
-introFrame.Position = UDim2.new(0, 10, 0, 10)
-introFrame.BackgroundTransparency = 1
-introFrame.Parent = tabs["Intro"].content
+-- Weapon list
+local weapons = {
+    "Energy Rifle",
+    "Uzi",
+    "Revolver",
+    "Hunting Rifle",
+    "Crossbow",
+    "Sniper",
+    "Shotgun",
+    "Burst Rifle",
+    "AR",
+    "SMG",
+    "Auto Shotgun",
+    "Tommy Gun",
+    "Grenade Launcher",
+    "Minigun",
+    "Railgun",
+    "Blaster",
+    "Annihilator"
+}
 
-local introText = Instance.new("TextLabel")
-introText.Size = UDim2.new(1, -20, 0, 200)
-introText.Position = UDim2.new(0, 10, 0, 10)
-introText.BackgroundTransparency = 1
-introText.TextColor3 = Color3.new(1, 1, 1)
-introText.Text = "Welcome to Rip_kaizer87's UI Library!\n\nThis UI is designed to enhance your Roblox experience with a sleek, red-themed interface. Features include:\n- Interactive buttons with hover effects\n- Toggles with animated switches\n- Sliders for precise value adjustments\n- Dropdown menus with smooth transitions\n\nCreated by Rip_kaizer87\nVersion 1.0\nEnjoy building with this library!"
-introText.TextWrapped = true
-introText.TextXAlignment = Enum.TextXAlignment.Left
-introText.TextYAlignment = Enum.TextYAlignment.Top
-introText.Font = Enum.Font.Gotham
-introText.TextSize = 16
-introText.Parent = introFrame
-
--- Avatar display
-local avatarImage = Instance.new("ImageLabel")
-avatarImage.Size = UDim2.new(0, 120, 0, 120)
-avatarImage.Position = UDim2.new(0.5, -60, 1, -130)
-avatarImage.BackgroundTransparency = 1
-local userId = Players:GetUserIdFromNameAsync("Rip_kaizer87") or 1
-avatarImage.Image = Players:GetUserThumbnailAsync(userId, Enum.ThumbnailType.AvatarBust, Enum.ThumbnailSize.Size150x150)
-avatarImage.Parent = introFrame
-
-local avatarCorner = Instance.new("UICorner")
-avatarCorner.CornerRadius = UDim.new(0, 60)
-avatarCorner.Parent = avatarImage
-
-local avatarLabel = Instance.new("TextLabel")
-avatarLabel.Size = UDim2.new(1, 0, 0, 20)
-avatarLabel.Position = UDim2.new(0, 0, 1, 5)
-avatarLabel.BackgroundTransparency = 1
-avatarLabel.TextColor3 = Color3.new(1, 1, 1)
-avatarLabel.Text = "Rip_kaizer87"
-avatarLabel.Font = Enum.Font.GothamBold
-avatarLabel.TextSize = 14
-avatarLabel.TextXAlignment = Enum.TextXAlignment.Center
-avatarLabel.Parent = avatarImage
-
--- Update canvas sizes
-TabSection.CanvasSize = UDim2.new(0, 0, 0, TabLayout.AbsoluteContentSize.Y + 20)
-Content.CanvasSize = UDim2.new(0, 0, 0, tabs[currentTab].contentLayout.AbsoluteContentSize.Y + 20)
-
--- Notification setup
-local function createNotification()
-    local Notification = Instance.new("Frame")
-    Notification.Size = UDim2.new(0, 300, 0, 100)
-    Notification.Position = UDim2.new(1, 10, 0, 100) -- Start off-screen to the right
-    Notification.BackgroundColor3 = Color3.fromRGB(150, 0, 0)
-    Notification.BorderSizePixel = 0
-    Notification.Parent = ScreenGui
-    Notification.ClipsDescendants = true
-
-    local NotificationCorner = Instance.new("UICorner")
-    NotificationCorner.CornerRadius = UDim.new(0, 8)
-    NotificationCorner.Parent = Notification
-
-    local NotificationStroke = Instance.new("UIStroke")
-    NotificationStroke.Color = Color3.fromRGB(100, 0, 0)
-    NotificationStroke.Thickness = 1
-    NotificationStroke.Transparency = 0.5
-    NotificationStroke.Parent = Notification
-
-    local NotificationText = Instance.new("TextLabel")
-    NotificationText.Size = UDim2.new(1, -20, 0, 50)
-    NotificationText.Position = UDim2.new(0, 10, 0, 10)
-    NotificationText.BackgroundTransparency = 1
-    NotificationText.TextColor3 = Color3.new(1, 1, 1)
-    NotificationText.TextWrapped = true
-    NotificationText.Font = Enum.Font.Gotham
-    NotificationText.TextSize = 14
-    NotificationText.TextXAlignment = Enum.TextXAlignment.Left
-    NotificationText.Parent = Notification
-
-    local OkButton = Instance.new("TextButton")
-    OkButton.Size = UDim2.new(0, 100, 0, 30)
-    OkButton.Position = UDim2.new(0, 20, 1, -40)
-    OkButton.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
-    OkButton.TextColor3 = Color3.new(1, 1, 1)
-    OkButton.Text = "OK"
-    OkButton.Font = Enum.Font.Gotham
-    OkButton.TextSize = 14
-    OkButton.BorderSizePixel = 0
-    OkButton.Parent = Notification
-
-    local OkCorner = Instance.new("UICorner")
-    OkCorner.CornerRadius = UDim.new(0, 6)
-    OkCorner.Parent = OkButton
-
-    local OkStroke = Instance.new("UIStroke")
-    OkStroke.Color = Color3.fromRGB(150, 0, 0)
-    OkStroke.Thickness = 1
-    OkStroke.Transparency = 0.8
-    OkStroke.Parent = OkButton
-
-    local IgnoreButton = Instance.new("TextButton")
-    IgnoreButton.Size = UDim2.new(0, 100, 0, 30)
-    IgnoreButton.Position = UDim2.new(1, -120, 1, -40)
-    IgnoreButton.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
-    IgnoreButton.TextColor3 = Color3.new(1, 1, 1)
-    IgnoreButton.Text = "Ignore"
-    IgnoreButton.Font = Enum.Font.Gotham
-    IgnoreButton.TextSize = 14
-    IgnoreButton.BorderSizePixel = 0
-    IgnoreButton.Parent = Notification
-
-    local IgnoreCorner = Instance.new("UICorner")
-    IgnoreCorner.CornerRadius = UDim.new(0, 6)
-    IgnoreCorner.Parent = IgnoreButton
-
-    local IgnoreStroke = Instance.new("UIStroke")
-    IgnoreStroke.Color = Color3.fromRGB(150, 0, 0)
-    IgnoreStroke.Thickness = 1
-    IgnoreStroke.Transparency = 0.8
-    IgnoreStroke.Parent = IgnoreButton
-
-    -- Hover effect for buttons
-    local function addHoverEffect(button)
-        button.MouseEnter:Connect(function()
-            local tween = TweenService:Create(button, TweenInfo.new(0.2), {BackgroundColor3 = Color3.fromRGB(80, 80, 80)})
-            tween:Play()
-        end)
-        button.MouseLeave:Connect(function()
-            local tween = TweenService:Create(button, TweenInfo.new(0.2), {BackgroundColor3 = Color3.fromRGB(60, 60, 60)})
-            tween:Play()
-        end)
-    end
-
-    addHoverEffect(OkButton)
-    addHoverEffect(IgnoreButton)
-
-    -- Animation for appearing
-    local function showNotification()
-        local tweenInfo = TweenInfo.new(0.5, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
-        local tween = TweenService:Create(Notification, tweenInfo, {Position = UDim2.new(1, -310, 0, 100)})
-        tween:Play()
-    end
-
-    -- Animation for disappearing (fade out)
-    local loadedScript = false
-    local function hideNotification()
-        local tweenInfo = TweenInfo.new(0.5, Enum.EasingStyle.Quad, Enum.EasingDirection.In)
-        local tween = TweenService:Create(Notification, tweenInfo, {BackgroundTransparency = 1})
-        local textTween = TweenService:Create(NotificationText, tweenInfo, {TextTransparency = 1})
-        local okButtonTween = TweenService:Create(OkButton, tweenInfo, {BackgroundTransparency = 1, TextTransparency = 1})
-        local ignoreButtonTween = TweenService:Create(IgnoreButton, tweenInfo, {BackgroundTransparency = 1, TextTransparency = 1})
-        tween:Play()
-        textTween:Play()
-        okButtonTween:Play()
-        ignoreButtonTween:Play()
-        tween.Completed:Connect(function()
-            Notification:Destroy()
-            if not loadedScript then
-                showUI() -- Show the main UI only if no script was loaded
-            end
-        end)
-    end
-
-    -- Placeholder function to check for saved script (replace with actual logic)
-    local function hasSavedScript()
-        -- Simulate checking for a saved script based on game.PlaceId
-        local savedScripts = {
-            [123456789] = "exampleScript.lua" -- Example PlaceId with a script
-        }
-        return savedScripts[game.PlaceId] ~= nil
-    end
-
-    -- Function to execute script (handles both saved and universal scripts)
-    local function executeScript(isUniversal)
-        if isUniversal then
-            -- Execute universal script
-            local success, result = pcall(function()
-                loadstring(game:HttpGet("https://raw.githubusercontent.com/OtakuDreamer98/Rip_kaizer87/refs/heads/main/MainScript"))()
-            end)
-            if not success then
-                warn("Failed to execute universal script: " .. tostring(result))
-            end
-        else
-            -- Simulate saved script execution (replace with actual logic)
-            print("Executing saved script for PlaceId: " .. game.PlaceId)
-            -- Add your saved script execution logic here
-        end
-    end
-
-    -- Configure notification based on script detection
-    if hasSavedScript() then
-        NotificationText.Text = "Saved script found for this game!\nWould you like to execute it?"
-        OkButton.MouseButton1Click:Connect(function()
-            loadedScript = true
-            executeScript(false) -- Execute saved script
-            hideNotification()
-        end)
-    else
-        NotificationText.Text = "No saved script found for this game.\nLoad universal script?"
-        OkButton.MouseButton1Click:Connect(function()
-            loadedScript = true
-            executeScript(true) -- Execute universal script
-            hideNotification()
-        end)
-    end
-
-    IgnoreButton.MouseButton1Click:Connect(hideNotification)
-    showNotification()
+-- Generate weapon buttons
+for _, weapon in ipairs(weapons) do
+    createWeaponButton(weapon)
 end
 
--- Create notification
-createNotification()
+-- Example Slider (optional)
+weaponTab:Slider("Damage Multiplier", 1, 10, 1, function(value)
+    print("Weapon Damage Multiplier set to", value .. "x")
+end)
 
-return Library
+------------------------------------------------
+-- TELEPORT TAB (4th)
+------------------------------------------------
+local teleportTab = Library:CreateTab("Teleport")
+
+-- Teleport function
+local function teleportTo(part)
+    local player = game.Players.LocalPlayer
+    if player and player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
+        player.Character.HumanoidRootPart.CFrame = part.CFrame + Vector3.new(0, 5, 0)
+    end
+end
+
+-- Teleport buttons
+teleportTab:Button("Teleport to House", function()
+    local house = game:GetService("Workspace"):WaitForChild("HouseHitbox")
+    teleportTo(house)
+end)
+
+teleportTab:Button("Teleport to Sawmill", function()
+    local sawmill = game:GetService("Workspace"):WaitForChild("Sawmill"):WaitForChild("DropperBase"):WaitForChild("Main Conveyor")
+    teleportTo(sawmill)
+end)
+
+------------------------------------------------
+-- AIMBOT TAB (5th)
+------------------------------------------------
+local aimbotTab = Library:CreateTab("Aimbot")
+
+-- === AIMBOT CORE ===
+local RunService = game:GetService("RunService")
+local Cam = workspace.CurrentCamera
+local Player = game:GetService("Players").LocalPlayer
+
+local fov = 120
+local isAiming = false
+local validNPCs = {}
+local raycastParams = RaycastParams.new()
+raycastParams.FilterType = Enum.RaycastFilterType.Blacklist
+
+local FOVring = Drawing.new("Circle")
+FOVring.Visible = false
+FOVring.Thickness = 2
+FOVring.Color = Color3.fromRGB(255, 255, 255)
+FOVring.Filled = false
+FOVring.Radius = fov
+FOVring.Position = Cam.ViewportSize / 2
+
+-- NPC check
+local function isNPC(obj)
+    return obj:IsA("Model")
+        and obj:FindFirstChild("Humanoid")
+        and obj.Humanoid.Health > 0
+        and obj:FindFirstChild("Head")
+        and obj:FindFirstChild("HumanoidRootPart")
+        and not game:GetService("Players"):GetPlayerFromCharacter(obj)
+end
+
+local function updateNPCs()
+    local tempTable = {}
+    for _, obj in ipairs(workspace:GetDescendants()) do
+        if isNPC(obj) then
+            tempTable[obj] = true
+        end
+    end
+    for i = #validNPCs, 1, -1 do
+        if not tempTable[validNPCs[i]] then
+            table.remove(validNPCs, i)
+        end
+    end
+    for obj in pairs(tempTable) do
+        if not table.find(validNPCs, obj) then
+            table.insert(validNPCs, obj)
+        end
+    end
+end
+
+local function updateDrawings()
+    FOVring.Position = Cam.ViewportSize / 2
+    FOVring.Radius = fov * (Cam.ViewportSize.Y / 1080)
+end
+
+local function predictPos(target)
+    local rootPart = target:FindFirstChild("HumanoidRootPart")
+    local head = target:FindFirstChild("Head")
+    if not rootPart or not head then return end
+    local velocity = rootPart.Velocity
+    local predictionTime = 0.02
+    local basePosition = rootPart.Position + velocity * predictionTime
+    local headOffset = head.Position - rootPart.Position
+    return basePosition + headOffset
+end
+
+local function getTarget()
+    local nearest, minDistance = nil, math.huge
+    local viewportCenter = Cam.ViewportSize / 2
+    raycastParams.FilterDescendantsInstances = {Player.Character}
+    for _, npc in ipairs(validNPCs) do
+        local predictedPos = predictPos(npc)
+        local screenPos, visible = Cam:WorldToViewportPoint(predictedPos)
+        if visible and screenPos.Z > 0 then
+            local ray = workspace:Raycast(Cam.CFrame.Position, (predictedPos - Cam.CFrame.Position).Unit * 1000, raycastParams)
+            if ray and ray.Instance:IsDescendantOf(npc) then
+                local distance = (Vector2.new(screenPos.X, screenPos.Y) - viewportCenter).Magnitude
+                if distance < minDistance and distance < fov then
+                    minDistance = distance
+                    nearest = npc
+                end
+            end
+        end
+    end
+    return nearest
+end
+
+local function aim(targetPosition)
+    local currentCF = Cam.CFrame
+    local targetDirection = (targetPosition - currentCF.Position).Unit
+    local smoothFactor = 0.581
+    local newLookVector = currentCF.LookVector:Lerp(targetDirection, smoothFactor)
+    Cam.CFrame = CFrame.new(currentCF.Position, currentCF.Position + newLookVector)
+end
+
+RunService.Heartbeat:Connect(function()
+    updateDrawings()
+    updateNPCs()
+    if isAiming then
+        local target = getTarget()
+        if target then
+            local predictedPosition = predictPos(target)
+            if predictedPosition then
+                aim(predictedPosition)
+            end
+        end
+    end
+end)
+
+-- === AIMBOT TAB UI ===
+aimbotTab:Toggle("Enable Aimbot", false, function(state)
+    isAiming = state
+    FOVring.Visible = state
+    print("Aimbot is now", state and "ON" or "OFF")
+end)
+
+aimbotTab:Slider("FOV Size", 50, 300, fov, function(value)
+    fov = value
+    print("FOV set to", value)
+end)
+
+-- FOV Color buttons
+aimbotTab:Button("Set FOV Color: White", function() FOVring.Color = Color3.fromRGB(255, 255, 255) end)
+aimbotTab:Button("Set FOV Color: Red", function() FOVring.Color = Color3.fromRGB(255, 0, 0) end)
+aimbotTab:Button("Set FOV Color: Green", function() FOVring.Color = Color3.fromRGB(0, 255, 0) end)
+aimbotTab:Button("Set FOV Color: Blue", function() FOVring.Color = Color3.fromRGB(0, 0, 255) end)
