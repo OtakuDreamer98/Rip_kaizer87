@@ -26,6 +26,7 @@ ToggleButton.TextSize = 16
 ToggleButton.BorderSizePixel = 0
 ToggleButton.Active = true
 ToggleButton.Draggable = true
+ToggleButton.Visible = false -- Hide initially
 ToggleButton.Parent = ScreenGui
 
 local ToggleCorner = Instance.new("UICorner")
@@ -47,6 +48,7 @@ Main.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
 Main.ClipsDescendants = true
 Main.Active = true
 Main.Draggable = true
+Main.Visible = false -- Hide initially
 Main.Parent = ScreenGui
 
 -- Rounded corners for main window
@@ -289,6 +291,17 @@ local function switchTab(tabName)
     -- Update scroll canvas sizes
     TabSection.CanvasSize = UDim2.new(0, 0, 0, TabLayout.AbsoluteContentSize.Y + 20)
     Content.CanvasSize = UDim2.new(0, 0, 0, selectedTab.contentLayout.AbsoluteContentSize.Y + 20)
+end
+
+-- Function to show the main UI with a fade-in animation
+local function showUI()
+    ToggleButton.Visible = true
+    Main.Visible = true
+    ToggleButton.BackgroundTransparency = 1
+    Main.BackgroundTransparency = 1
+    local tweenInfo = TweenInfo.new(0.5, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
+    TweenService:Create(ToggleButton, tweenInfo, {BackgroundTransparency = 0}):Play()
+    TweenService:Create(Main, tweenInfo, {BackgroundTransparency = 0}):Play()
 end
 
 -- Function to create a tab
@@ -654,5 +667,170 @@ avatarLabel.Parent = avatarImage
 -- Update canvas sizes
 TabSection.CanvasSize = UDim2.new(0, 0, 0, TabLayout.AbsoluteContentSize.Y + 20)
 Content.CanvasSize = UDim2.new(0, 0, 0, tabs[currentTab].contentLayout.AbsoluteContentSize.Y + 20)
+
+-- Notification setup
+local function createNotification()
+    local Notification = Instance.new("Frame")
+    Notification.Size = UDim2.new(0, 300, 0, 100)
+    Notification.Position = UDim2.new(1, 10, 0, 100) -- Start off-screen to the right
+    Notification.BackgroundColor3 = Color3.fromRGB(150, 0, 0)
+    Notification.BorderSizePixel = 0
+    Notification.Parent = ScreenGui
+    Notification.ClipsDescendants = true
+
+    local NotificationCorner = Instance.new("UICorner")
+    NotificationCorner.CornerRadius = UDim.new(0, 8)
+    NotificationCorner.Parent = Notification
+
+    local NotificationStroke = Instance.new("UIStroke")
+    NotificationStroke.Color = Color3.fromRGB(100, 0, 0)
+    NotificationStroke.Thickness = 1
+    NotificationStroke.Transparency = 0.5
+    NotificationStroke.Parent = Notification
+
+    local NotificationText = Instance.new("TextLabel")
+    NotificationText.Size = UDim2.new(1, -20, 0, 50)
+    NotificationText.Position = UDim2.new(0, 10, 0, 10)
+    NotificationText.BackgroundTransparency = 1
+    NotificationText.TextColor3 = Color3.new(1, 1, 1)
+    NotificationText.TextWrapped = true
+    NotificationText.Font = Enum.Font.Gotham
+    NotificationText.TextSize = 14
+    NotificationText.TextXAlignment = Enum.TextXAlignment.Left
+    NotificationText.Parent = Notification
+
+    local OkButton = Instance.new("TextButton")
+    OkButton.Size = UDim2.new(0, 100, 0, 30)
+    OkButton.Position = UDim2.new(0, 20, 1, -40)
+    OkButton.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
+    OkButton.TextColor3 = Color3.new(1, 1, 1)
+    OkButton.Text = "OK"
+    OkButton.Font = Enum.Font.Gotham
+    OkButton.TextSize = 14
+    OkButton.BorderSizePixel = 0
+    OkButton.Parent = Notification
+
+    local OkCorner = Instance.new("UICorner")
+    OkCorner.CornerRadius = UDim.new(0, 6)
+    OkCorner.Parent = OkButton
+
+    local OkStroke = Instance.new("UIStroke")
+    OkStroke.Color = Color3.fromRGB(150, 0, 0)
+    OkStroke.Thickness = 1
+    OkStroke.Transparency = 0.8
+    OkStroke.Parent = OkButton
+
+    local IgnoreButton = Instance.new("TextButton")
+    IgnoreButton.Size = UDim2.new(0, 100, 0, 30)
+    IgnoreButton.Position = UDim2.new(1, -120, 1, -40)
+    IgnoreButton.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
+    IgnoreButton.TextColor3 = Color3.new(1, 1, 1)
+    IgnoreButton.Text = "Ignore"
+    IgnoreButton.Font = Enum.Font.Gotham
+    IgnoreButton.TextSize = 14
+    IgnoreButton.BorderSizePixel = 0
+    IgnoreButton.Parent = Notification
+
+    local IgnoreCorner = Instance.new("UICorner")
+    IgnoreCorner.CornerRadius = UDim.new(0, 6)
+    IgnoreCorner.Parent = IgnoreButton
+
+    local IgnoreStroke = Instance.new("UIStroke")
+    IgnoreStroke.Color = Color3.fromRGB(150, 0, 0)
+    IgnoreStroke.Thickness = 1
+    IgnoreStroke.Transparency = 0.8
+    IgnoreStroke.Parent = IgnoreButton
+
+    -- Hover effect for buttons
+    local function addHoverEffect(button)
+        button.MouseEnter:Connect(function()
+            local tween = TweenService:Create(button, TweenInfo.new(0.2), {BackgroundColor3 = Color3.fromRGB(80, 80, 80)})
+            tween:Play()
+        end)
+        button.MouseLeave:Connect(function()
+            local tween = TweenService:Create(button, TweenInfo.new(0.2), {BackgroundColor3 = Color3.fromRGB(60, 60, 60)})
+            tween:Play()
+        end)
+    end
+
+    addHoverEffect(OkButton)
+    addHoverEffect(IgnoreButton)
+
+    -- Animation for appearing
+    local function showNotification()
+        local tweenInfo = TweenInfo.new(0.5, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
+        local tween = TweenService:Create(Notification, tweenInfo, {Position = UDim2.new(1, -310, 0, 100)})
+        tween:Play()
+    end
+
+    -- Animation for disappearing (fade out)
+    local loadedScript = false
+    local function hideNotification()
+        local tweenInfo = TweenInfo.new(0.5, Enum.EasingStyle.Quad, Enum.EasingDirection.In)
+        local tween = TweenService:Create(Notification, tweenInfo, {BackgroundTransparency = 1})
+        local textTween = TweenService:Create(NotificationText, tweenInfo, {TextTransparency = 1})
+        local okButtonTween = TweenService:Create(OkButton, tweenInfo, {BackgroundTransparency = 1, TextTransparency = 1})
+        local ignoreButtonTween = TweenService:Create(IgnoreButton, tweenInfo, {BackgroundTransparency = 1, TextTransparency = 1})
+        tween:Play()
+        textTween:Play()
+        okButtonTween:Play()
+        ignoreButtonTween:Play()
+        tween.Completed:Connect(function()
+            Notification:Destroy()
+            if not loadedScript then
+                showUI() -- Show the main UI only if no script was loaded
+            end
+        end)
+    end
+
+    -- Placeholder function to check for saved script (replace with actual logic)
+    local function hasSavedScript()
+        -- Simulate checking for a saved script based on game.PlaceId
+        local savedScripts = {
+            [123456789] = "exampleScript.lua" -- Example PlaceId with a script
+        }
+        return savedScripts[game.PlaceId] ~= nil
+    end
+
+    -- Function to execute script (handles both saved and universal scripts)
+    local function executeScript(isUniversal)
+        if isUniversal then
+            -- Execute universal script
+            local success, result = pcall(function()
+                loadstring(game:HttpGet("https://raw.githubusercontent.com/OtakuDreamer98/Rip_kaizer87/refs/heads/main/MainScript"))()
+            end)
+            if not success then
+                warn("Failed to execute universal script: " .. tostring(result))
+            end
+        else
+            -- Simulate saved script execution (replace with actual logic)
+            print("Executing saved script for PlaceId: " .. game.PlaceId)
+            -- Add your saved script execution logic here
+        end
+    end
+
+    -- Configure notification based on script detection
+    if hasSavedScript() then
+        NotificationText.Text = "Saved script found for this game!\nWould you like to execute it?"
+        OkButton.MouseButton1Click:Connect(function()
+            loadedScript = true
+            executeScript(false) -- Execute saved script
+            hideNotification()
+        end)
+    else
+        NotificationText.Text = "No saved script found for this game.\nLoad universal script?"
+        OkButton.MouseButton1Click:Connect(function()
+            loadedScript = true
+            executeScript(true) -- Execute universal script
+            hideNotification()
+        end)
+    end
+
+    IgnoreButton.MouseButton1Click:Connect(hideNotification)
+    showNotification()
+end
+
+-- Create notification
+createNotification()
 
 return Library
